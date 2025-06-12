@@ -3,11 +3,173 @@
 <head>
 	<meta charset='UTF-8'>
 	<meta name='viewport' content='width=device-width, initial-scale=1.0'>
-	<title>ChronoSync</title>
-	<script src='[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)'></script>
+	<title>ChronoSync - Friends</title>
+	<script src='https://cdn.tailwindcss.com'></script>
 	<link rel='stylesheet' href='assets/css/style.css'>
 </head>
 <body class='bg-gray-100'>
-	<!-- Content for friends.html -->
+	<div class='container mx-auto p-4'>
+		<h1 class='text-2xl font-bold mb-4'>Friends</h1>
+
+		<div id='friendsList' class='mb-4'>
+			<h2 class='text-lg font-semibold mb-2'>Friends</h2>
+			<ul id='acceptedFriendsList' class='list-none p-0'>
+				<!-- Friends will be populated here -->
+			</ul>
+		</div>
+
+		<div id='pendingRequests' class='mb-4'>
+			<h2 class='text-lg font-semibold mb-2'>Pending Friend Requests</h2>
+			<ul id='pendingRequestsList' class='list-none p-0'>
+				<!-- Pending requests will be populated here -->
+			</ul>
+		</div>
+
+		<div id='sentRequests' class='mb-4'>
+			<h2 class='text-lg font-semibold mb-2'>Sent Friend Requests</h2>
+			<ul id='sentRequestsList' class='list-none p-0'>
+				<!-- Sent requests will be populated here -->
+			</ul>
+		</div>
+	</div>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const acceptedFriendsList = document.getElementById('acceptedFriendsList');
+			const pendingRequestsList = document.getElementById('pendingRequestsList');
+			const sentRequestsList = document.getElementById('sentRequestsList');
+
+			function fetchFriends() {
+				fetch('api/get_friends.php')
+					.then(response => response.json())
+					.then(data => {
+						if (data.success) {
+							displayFriends(data.friends);
+							displayPendingRequests(data.pending);
+							displaySentRequests(data.sent);
+						} else {
+							console.error('Error fetching friends:', data.message);
+							// Optionally display an error message to the user
+						}
+					})
+					.catch(error => {
+						console.error('Error fetching friends:', error);
+						// Optionally display an error message to the user
+					});
+			}
+
+			function displayFriends(friends) {
+				acceptedFriendsList.innerHTML = ''; // Clear existing list
+				if (friends.length === 0) {
+					acceptedFriendsList.innerHTML = '<p>No friends yet.</p>';
+					return;
+				}
+				friends.forEach(friend => {
+					const listItem = document.createElement('li');
+					listItem.classList.add('py-2', 'border-b', 'border-gray-200');
+					listItem.innerHTML = `
+						<a href="profile.html?user_id=${friend.id}" class="flex items-center">
+							<img src="${friend.profile_picture || 'assets/images/default_profile.png'}" alt="${friend.username}" class="w-8 h-8 rounded-full mr-2">
+							<span>${friend.first_name} ${friend.last_name} (${friend.username})</span>
+						</a>
+					`;
+					acceptedFriendsList.appendChild(listItem);
+				});
+			}
+
+			function displayPendingRequests(pendingRequests) {
+				pendingRequestsList.innerHTML = ''; // Clear existing list
+				if (pendingRequests.length === 0) {
+					pendingRequestsList.innerHTML = '<p>No pending friend requests.</p>';
+					return;
+				}
+				pendingRequests.forEach(request => {
+					const listItem = document.createElement('li');
+					listItem.classList.add('py-2', 'border-b', 'border-gray-200', 'flex', 'items-center', 'justify-between');
+					listItem.innerHTML = `
+						<div class="flex items-center">
+							<img src="${request.profile_picture || 'assets/images/default_profile.png'}" alt="${request.username}" class="w-8 h-8 rounded-full mr-2">
+							<span>${request.first_name} ${request.last_name} (${request.username})</span>
+						</div>
+						<div>
+							<button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2 accept-request" data-user-id="${request.id}">Accept</button>
+							<button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded reject-request" data-user-id="${request.id}">Reject</button>
+						</div>
+					`;
+					pendingRequestsList.appendChild(listItem);
+				});
+
+				// Add event listeners to the accept and reject buttons
+				document.querySelectorAll('.accept-request').forEach(button => {
+					button.addEventListener('click', function() {
+						const userId = this.dataset.userId;
+						handleFriendRequest(userId, 'accept');
+					});
+				});
+
+				document.querySelectorAll('.reject-request').forEach(button => {
+					button.addEventListener('click', function() {
+						const userId = this.dataset.userId;
+						handleFriendRequest(userId, 'reject');
+					});
+				});
+			}
+
+			function displaySentRequests(sentRequests) {
+				sentRequestsList.innerHTML = ''; // Clear existing list
+				if (sentRequests.length === 0) {
+					sentRequestsList.innerHTML = '<p>No sent friend requests.</p>';
+					return;
+				}
+				sentRequests.forEach(request => {
+					const listItem = document.createElement('li');
+					listItem.classList.add('py-2', 'border-b', 'border-gray-200');
+					listItem.innerHTML = `
+						<div class="flex items-center">
+							<img src="${request.profile_picture || 'assets/images/default_profile.png'}" alt="${request.username}" class="w-8 h-8 rounded-full mr-2">
+							<span>${request.first_name} ${request.last_name} (${request.username})</span>
+						</div>
+					`;
+					sentRequestsList.appendChild(listItem);
+				});
+			}
+
+
+			function handleFriendRequest(userId, action) {
+				let apiEndpoint = '';
+				if (action === 'accept') {
+					apiEndpoint = 'api/accept_friend_request.php';
+				} else if (action === 'reject') {
+					apiEndpoint = 'api/reject_friend_request.php';
+				}
+
+				fetch(apiEndpoint, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded'
+						},
+						body: `user_id=${userId}`
+					})
+					.then(response => response.json())
+					.then(data => {
+						if (data.success) {
+							// Refresh the friend lists
+							fetchFriends();
+						} else {
+							console.error(`Error ${action}ing friend request:`, data.message);
+							// Optionally display an error message to the user
+						}
+					})
+					.catch(error => {
+						console.error(`Error ${action}ing friend request:`, error);
+						// Optionally display an error message to the user
+					});
+			}
+
+
+			// Initial fetch of friends when the page loads
+			fetchFriends();
+		});
+	</script>
 </body>
 </html>
