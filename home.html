@@ -4,10 +4,139 @@
 	<meta charset='UTF-8'>
 	<meta name='viewport' content='width=device-width, initial-scale=1.0'>
 	<title>ChronoSync</title>
-	<script src='[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)'></script>
+	<script src='https://cdn.tailwindcss.com'></script>
 	<link rel='stylesheet' href='assets/css/style.css'>
 </head>
 <body class='bg-gray-100'>
-	<!-- Content for home.html -->
+	<div class='container mx-auto mt-8'>
+		<!-- Post Creation Section -->
+		<div class='bg-white rounded-lg shadow-md p-4 mb-4'>
+			<h2 class='text-lg font-semibold mb-2'>Create a Post</h2>
+			<form id='postForm'>
+				<textarea id='postContent' class='w-full p-2 border rounded-md' placeholder='Share your thoughts...'></textarea>
+				<input type='file' id='postImage' class='mb-2'>
+				<button type='submit' class='bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600'>Post</button>
+			</form>
+		</div>
+
+		<!-- Post Feed Section -->
+		<div id='postFeed'>
+			<!-- Posts will be dynamically added here -->
+		</div>
+	</div>
+
+	<script src='assets/js/main.js'></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', () => {
+			const postForm = document.getElementById('postForm');
+			const postContentInput = document.getElementById('postContent');
+			const postImageInput = document.getElementById('postImage');
+			const postFeed = document.getElementById('postFeed');
+
+			postForm.addEventListener('submit', async (event) => {
+				event.preventDefault();
+
+				const content = postContentInput.value;
+				const imageFile = postImageInput.files[0];
+
+				if (!content && !imageFile) {
+					alert('Please enter some content or select an image.');
+					return;
+				}
+
+				const formData = new FormData();
+				formData.append('content', content);
+				if (imageFile) {
+					formData.append('image', imageFile);
+				}
+
+				try {
+					const response = await fetch('api/create_post.php', {
+						method: 'POST',
+						body: formData,
+						headers: {
+							'Authorization': 'Bearer ' + localStorage.getItem('token') // Include token for authentication
+						}
+					});
+
+					const data = await response.json();
+
+					if (response.ok) {
+						postContentInput.value = '';
+						postImageInput.value = '';
+						loadPosts(); // Refresh the post feed
+					} else {
+						alert(data.message || 'Failed to create post.');
+					}
+				} catch (error) {
+					console.error('Error creating post:', error);
+					alert('Error creating post.');
+				}
+			});
+
+			async function loadPosts() {
+				try {
+					const response = await fetch('api/get_posts.php', {
+						headers: {
+							'Authorization': 'Bearer ' + localStorage.getItem('token') // Include token for authentication
+						}
+					});
+					const data = await response.json();
+
+					if (response.ok) {
+						postFeed.innerHTML = ''; // Clear existing posts
+						data.posts.forEach(post => {
+							const postElement = createPostElement(post);
+							postFeed.appendChild(postElement);
+						});
+					} else {
+						console.error(data.message || 'Failed to load posts.');
+					}
+				} catch (error) {
+					console.error('Error loading posts:', error);
+				}
+			}
+
+			function createPostElement(post) {
+				const postDiv = document.createElement('div');
+				postDiv.classList.add('bg-white', 'rounded-lg', 'shadow-md', 'p-4', 'mb-4');
+
+				const contentParagraph = document.createElement('p');
+				contentParagraph.textContent = post.content;
+				postDiv.appendChild(contentParagraph);
+
+				if (post.image_url) {
+					const imageElement = document.createElement('img');
+					imageElement.src = post.image_url;
+					imageElement.classList.add('w-full', 'rounded-md', 'mb-2');
+					postDiv.appendChild(imageElement);
+				}
+
+				const timestamp = new Date(post.created_at).toLocaleString();
+				const timestampElement = document.createElement('small');
+				timestampElement.textContent = `Posted on: ${timestamp}`;
+				postDiv.appendChild(timestampElement);
+				
+				// Add author name
+				const authorElement = document.createElement('p');
+				authorElement.textContent = `Posted by: ${post.username}`; // Assuming the API returns the username
+				postDiv.appendChild(authorElement);
+
+
+				return postDiv;
+			}
+			
+			// Check if the user is logged in
+			const token = localStorage.getItem('token');
+			if (!token) {
+				// Redirect to login page if not logged in
+				window.location.href = 'login.html';
+			} else {
+				loadPosts(); // Load posts when the page loads
+			}
+
+
+		});
+	</script>
 </body>
 </html>
