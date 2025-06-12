@@ -3,11 +3,71 @@
 <head>
 	<meta charset='UTF-8'>
 	<meta name='viewport' content='width=device-width, initial-scale=1.0'>
-	<title>ChronoSync</title>
-	<script src='[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)'></script>
+	<title>ChronoSync - Events</title>
+	<script src='https://cdn.tailwindcss.com'></script>
 	<link rel='stylesheet' href='assets/css/style.css'>
 </head>
 <body class='bg-gray-100'>
-	<!-- Content for events.html -->
+	<div class='container mx-auto p-4'>
+		<h1 class='text-2xl font-bold mb-4'>Upcoming Events</h1>
+
+		<div id='events-container'>
+			<!-- Events will be dynamically loaded here -->
+			<p>Loading events...</p>
+		</div>
+
+		<a href='create_event.html' class='inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4'>Create New Event</a>
+	</div>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const eventsContainer = document.getElementById('events-container');
+
+			function displayEvents(events) {
+				eventsContainer.innerHTML = ''; // Clear loading message
+
+				if (events.length === 0) {
+					eventsContainer.innerHTML = '<p>No upcoming events found.</p>';
+					return;
+				}
+
+				events.forEach(event => {
+					const eventDiv = document.createElement('div');
+					eventDiv.classList.add('bg-white', 'shadow-md', 'rounded-lg', 'p-4', 'mb-4');
+
+					eventDiv.innerHTML = `
+						<h2 class='text-xl font-semibold mb-2'>${event.event_name}</h2>
+						<p class='text-gray-600 mb-2'>${event.description}</p>
+						<p class='text-gray-700 mb-2'>Location: ${event.location}</p>
+						<p class='text-gray-700 mb-2'>Start Time: ${new Date(event.start_time).toLocaleString()}</p>
+						<p class='text-gray-700 mb-2'>End Time: ${new Date(event.end_time).toLocaleString()}</p>
+						<a href='view_event.html?id=${event.id}' class='inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2'>View Event</a>
+					`;
+
+					eventsContainer.appendChild(eventDiv);
+				});
+			}
+
+			// Fetch events from the API
+			fetch('api/get_events.php')
+				.then(response => {
+					if (!response.ok) {
+						throw new Error('Network response was not ok');
+					}
+					return response.json();
+				})
+				.then(data => {
+					if (Array.isArray(data)) {
+						displayEvents(data);
+					} else {
+						eventsContainer.innerHTML = '<p>Error: Could not retrieve events.</p>';
+					}
+				})
+				.catch(error => {
+					console.error('Error fetching events:', error);
+					eventsContainer.innerHTML = '<p>Error: Could not retrieve events.</p>';
+				});
+		});
+	</script>
 </body>
 </html>
