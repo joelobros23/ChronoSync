@@ -3,11 +3,41 @@
 <head>
 	<meta charset='UTF-8'>
 	<meta name='viewport' content='width=device-width, initial-scale=1.0'>
-	<title>ChronoSync</title>
-	<script src='[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)'></script>
+	<title>Create Event - ChronoSync</title>
+	<script src='https://cdn.tailwindcss.com'></script>
 	<link rel='stylesheet' href='assets/css/style.css'>
 </head>
 <body class='bg-gray-100'>
-	<!-- Content for create_event.html -->
+	<div class='container mx-auto mt-10 p-8 bg-white shadow-md rounded-md'>
+		<h1 class='text-2xl font-semibold mb-6'>Create a New Event</h1>
+		<form id='createEventForm'>
+			<div class='mb-4'>
+				<label for='eventName' class='block text-gray-700 text-sm font-bold mb-2'>Event Name:</label>
+				<input type='text' id='eventName' name='eventName' class='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' required>
+			</div>
+			<div class='mb-4'>
+				<label for='description' class='block text-gray-700 text-sm font-bold mb-2'>Description:</label>
+				<textarea id='description' name='description' rows='3' class='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'></textarea>
+			</div>
+			<div class='mb-4'>
+				<label for='location' class='block text-gray-700 text-sm font-bold mb-2'>Location:</label>
+				<input type='text' id='location' name='location' class='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'>
+			</div>
+			<div class='mb-4'>
+				<label for='startTime' class='block text-gray-700 text-sm font-bold mb-2'>Start Time:</label>
+				<input type='datetime-local' id='startTime' name='startTime' class='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' required>
+			</div>
+			<div class='mb-4'>
+				<label for='endTime' class='block text-gray-700 text-sm font-bold mb-2'>End Time:</label>
+				<input type='datetime-local' id='endTime' name='endTime' class='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline' required>
+			</div>
+			<div class='flex items-center justify-between'>
+				<button class='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline' type='submit'>
+					Create Event
+				</button>
+			</div>
+		</form>
+	</div>
+	<script src='assets/js/events.js'></script>
 </body>
 </html>
