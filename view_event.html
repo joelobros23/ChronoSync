@@ -3,11 +3,87 @@
 <head>
 	<meta charset='UTF-8'>
 	<meta name='viewport' content='width=device-width, initial-scale=1.0'>
-	<title>ChronoSync</title>
-	<script src='[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)'></script>
+	<title>ChronoSync - Event Details</title>
+	<script src='https://cdn.tailwindcss.com'></script>
 	<link rel='stylesheet' href='assets/css/style.css'>
 </head>
 <body class='bg-gray-100'>
-	<!-- Content for view_event.html -->
+	<div class='container mx-auto mt-8 p-8 bg-white shadow-md rounded-lg'>
+		<h1 class='text-2xl font-semibold mb-4'>Event Details</h1>
+
+		<div id='event-details' class='mb-6'>
+			<!-- Event details will be loaded here -->
+			<p>Loading event details...</p>
+		</div>
+
+		<h2 class='text-xl font-semibold mb-2'>Attendees</h2>
+		<div id='attendees-list'>
+			<!-- Attendee list will be loaded here -->
+			<p>Loading attendees...</p>
+		</div>
+	</div>
+
+	<script>
+		const urlParams = new URLSearchParams(window.location.search);
+		const eventId = urlParams.get('id');
+
+		async function fetchEventDetails(eventId) {
+			try {
+				const response = await fetch(`api/get_event_details.php?id=${eventId}`);
+				if (!response.ok) {
+					throw new Error(`HTTP error! Status: ${response.status}`);
+				}
+				const data = await response.json();
+				return data;
+			} catch (error) {
+				console.error('Error fetching event details:', error);
+				return null;
+			}
+		}
+
+		async function displayEventDetails() {
+			const eventDetails = await fetchEventDetails(eventId);
+
+			if (eventDetails && eventDetails.event) {
+				const event = eventDetails.event;
+				const eventDetailsContainer = document.getElementById('event-details');
+
+				eventDetailsContainer.innerHTML = `
+					<h3 class='text-lg font-semibold'>${event.event_name}</h3>
+					<p class='text-gray-600'>${event.description}</p>
+					<p><strong>Location:</strong> ${event.location}</p>
+					<p><strong>Start Time:</strong> ${event.start_time}</p>
+					<p><strong>End Time:</strong> ${event.end_time}</p>
+				`;
+
+				const attendeesListContainer = document.getElementById('attendees-list');
+				attendeesListContainer.innerHTML = ''; // Clear loading message
+
+				if (eventDetails.attendees && eventDetails.attendees.length > 0) {
+					const attendeeList = document.createElement('ul');
+					attendeesListContainer.appendChild(attendeeList);
+
+					eventDetails.attendees.forEach(attendee => {
+						const listItem = document.createElement('li');
+						listItem.textContent = `${attendee.first_name} ${attendee.last_name} (${attendee.rsvp_status})`;
+						attendeeList.appendChild(listItem);
+					});
+				} else {
+					attendeesListContainer.textContent = 'No attendees yet.';
+				}
+
+			} else {
+				document.getElementById('event-details').textContent = 'Failed to load event details.';
+				document.getElementById('attendees-list').textContent = ''; // Clear loading message if event details fail to load
+			}
+		}
+
+		if (eventId) {
+			displayEventDetails();
+		} else {
+			document.getElementById('event-details').textContent = 'Event ID not provided.';
+			document.getElementById('attendees-list').textContent = ''; // Clear loading message if event id not provided
+		}
+	</script>
 </body>
 </html>
